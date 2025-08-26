@@ -20,6 +20,8 @@ def censor_text(text):
         'bullshit': 'bulls****',
         'bloodcaat': 'b********',
         'cock': 'c***',
+        'clit': 'c***',
+        'cum': 'c**',
         'damn': 'd***',
         'dick': 'd***',
         'faggot': 'f*****',
@@ -43,6 +45,7 @@ def censor_text(text):
         'shittin': 's******',
         'suckin': 's*****',
         'twat': 't***',
+        'thot': 't***',
         'tit': 't**',
         'tits': 't***',
         'nigga': 'n****',
@@ -68,6 +71,7 @@ def censor_text(text):
         'chingamo': 'c*******',
         'teta': 't***',
         'pendejo': 'p******',
+        'piranha': 'p******',
         'puta': 'p***',
         'puñeta': 'p*****',
         'jodió': 'j****',
@@ -77,8 +81,16 @@ def censor_text(text):
         'rassclaat': 'r********',
 
     }
+    # Words that are substrings of other words and should not match inside other words
+    substring_sensitive = {'ass', 'nut', 'tit', 'cum', 'damn', 'hoe', 'pau', 'verga', 'puta', 'mierda', 'teta', 'culo', 'clit', 'cock'}
     for word, censored_word in curse_words.items():
-        text = re.sub(rf'\b{word}\b', censored_word, text, flags=re.IGNORECASE)
+        if word in substring_sensitive:
+            # Use negative lookbehind and lookahead to avoid matching inside other words
+            pattern = rf'(?<!\w){word}(?!\w)'
+        else:
+            # Use word boundaries for other words
+            pattern = rf'\b{word}\b'
+        text = re.sub(pattern, censored_word, text, flags=re.IGNORECASE)
     return text
 
 def selective_normalize(text):
@@ -86,7 +98,8 @@ def selective_normalize(text):
     replacements = {
         'ṣ': 's',
         'ẹ': 'e',
-        'ạ': 'a'
+        'ạ': 'a',
+        'ọ': 'o'  # Added this line
     }
     for char, replacement in replacements.items():
         text = text.replace(char, replacement)
