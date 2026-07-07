@@ -4,6 +4,51 @@ import re
 
 app = Flask(__name__)
 
+LRC_CREDIT_LABELS = (
+    '作词',
+    '作詞',
+    '作曲',
+    '制作人',
+    '制作',
+    '编曲',
+    '編曲',
+    '音频工程师',
+    '音頻工程師',
+    '音频助理',
+    '音頻助理',
+    '原声吉他',
+    '原聲吉他',
+    '和声',
+    '和聲',
+    '管风琴',
+    '管風琴',
+    '人声',
+    '人聲',
+    '主人声',
+    '主人聲',
+    '合成器',
+    '贝斯',
+    '貝斯',
+    '电吉他',
+    '電吉他',
+    '键盘',
+    '鍵盤',
+    '鼓',
+    '母带工程师',
+    '母帶工程師',
+    '附加制作',
+    '附加製作',
+    '混音师',
+    '混音師',
+    '混音工程师',
+    '混音工程師',
+    '录音工程师',
+    '錄音工程師',
+)
+LRC_CREDIT_PATTERN = re.compile(
+    rf"^\s*(?:{'|'.join(re.escape(label) for label in LRC_CREDIT_LABELS)})\s*[:：]"
+)
+
 def replace_notes(text):
     # Replace ♪ with ♫ in the text
     return text.replace('♪', '♫')
@@ -22,6 +67,8 @@ def censor_text(text):
         'cock': 'c***',
         'clit': 'c***',
         'cum': 'c**',
+        'cunt': 'c****',
+        'cunts': 'c*****',
         'damn': 'd***',
         'dick': 'd***',
         'faggot': 'f*****',
@@ -34,6 +81,7 @@ def censor_text(text):
         'fucked': 'f*****',
         'nut': 'n**',
         'nuts': 'n***',
+        'mindfuck': 'mindf***',
         'motherfuckin': 'motherf*****',
         'motherfucking': 'motherf******',
         'motherfuckers': 'motherf******',
@@ -94,12 +142,19 @@ def censor_text(text):
     return text
 
 def selective_normalize(text):
-    # Replace only specific characters
+    # Replace only specific characters (keep Portuguese and Spanish accents)
     replacements = {
-        'ṣ': 's',
-        'ẹ': 'e',
-        'ạ': 'a',
-        'ọ': 'o'  # Added this line
+        # Yoruba characters
+        'ṣ': 's', 'Ṣ': 'S',
+        'ẹ': 'e', 'Ẹ': 'E',
+        'ạ': 'a', 'Ạ': 'A',
+        'ọ': 'o', 'Ọ': 'O',
+        'ụ': 'u', 'Ụ': 'U',
+        'ị': 'i', 'Ị': 'I',
+        # Turkish
+        'ş': 's', 'Ş': 'S',
+        'ğ': 'g', 'Ğ': 'G',
+        'İ': 'I', 'ı': 'i',
     }
     for char, replacement in replacements.items():
         text = text.replace(char, replacement)
@@ -112,6 +167,9 @@ def lrc_to_srt(lrc_content):
     
     for idx, match in enumerate(matches):
         timestamp, text = match
+
+        if LRC_CREDIT_PATTERN.match(text):
+            continue
         
         # Process text to replace notes, censor, and selectively normalize
         if not text.strip():
@@ -170,4 +228,4 @@ def upload_file():
     return render_template_string(html_form)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
